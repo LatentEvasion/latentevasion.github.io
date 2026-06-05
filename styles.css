@@ -278,8 +278,17 @@ body {
   line-height: 1.45;
 }
 
+.acknowledgment-section {
+  background: var(--bg-alt);
+  box-shadow: 0 0 0 100vmax var(--bg-alt);
+  clip-path: inset(0 -100vmax);
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: 42px 0 48px;
+}
+
 .acknowledgment-box {
-  margin: 28px auto 0;
+  margin: 0 auto;
   max-width: 920px;
   text-align: center;
 }

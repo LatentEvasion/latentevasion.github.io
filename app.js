@@ -95,7 +95,17 @@ function materializeStaticRidgeline(bundle, promptIndex) {
     ...bundle,
     layers: (bundle.layers || []).map((layer, index) => ({
       ...layer,
-      selected: selected[index] || { pipeline: null, projection: null, dim: null },
+      selected: {
+        pipeline: Number.isFinite(layer.pipeline?.[promptIndex])
+          ? layer.pipeline[promptIndex]
+          : selected[index]?.pipeline ?? null,
+        projection: Number.isFinite(layer.projection?.[promptIndex])
+          ? layer.projection[promptIndex]
+          : selected[index]?.projection ?? null,
+        dim: Number.isFinite(layer.dim?.[promptIndex])
+          ? layer.dim[promptIndex]
+          : selected[index]?.dim ?? null,
+      },
     })),
   };
 }
@@ -1214,13 +1224,12 @@ function preferredLayerDiveIndex(layers, config) {
 
 async function loadLayerDivePrompts() {
   const config = state.layerDive.config;
-  const run = promptRunForConfig(config);
-  if (!run || !els.layerDivePrompt) {
+  if (!config || !els.layerDivePrompt) {
     state.layerDive.prompts = [];
     els.layerDivePrompt?.replaceChildren();
     return;
   }
-  const data = await getJson(`/api/prompts?file=${encodeURIComponent(run.file)}`);
+  const data = await getJson(`/api/evasion-demo?model=${encodeURIComponent(config.model)}`);
   state.layerDive.prompts = data.prompts;
   fillSelect(
     els.layerDivePrompt,
