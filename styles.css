@@ -278,6 +278,52 @@ body {
   line-height: 1.45;
 }
 
+.acknowledgment-box {
+  margin: 28px auto 0;
+  max-width: 920px;
+  text-align: center;
+}
+
+.acknowledgment-box h3 {
+  font-size: 20px;
+  margin: 0 0 10px;
+}
+
+.acknowledgment-box p {
+  color: #4d4942;
+  font-size: 15px;
+  margin: 0 auto;
+  max-width: 900px;
+}
+
+.ack-logo-grid {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.ack-logo-card {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  height: 92px;
+  justify-content: center;
+  overflow: hidden;
+  padding: 12px;
+  text-decoration: none;
+}
+
+.ack-logo-card img {
+  display: block;
+  max-height: 68px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
 .section-heading {
   margin-left: auto;
   margin-right: auto;
@@ -1096,8 +1142,18 @@ canvas {
     gap: 12px;
   }
 
+  .ack-logo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .author-card.row-one,
   .author-card.row-two {
     grid-column: span 1;
+  }
+}
+
+@media (max-width: 520px) {
+  .ack-logo-grid {
+    grid-template-columns: 1fr;
   }
 }
