@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://latentevasion.github.io/sitemap.xml

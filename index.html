@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Latent Refusal Visualization</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <section id="homePage" class="home-page">
+        <nav class="home-nav" aria-label="Project links and modes">
+          <a class="nav-icon-link" href="https://arxiv.org/abs/2605.21706" target="_blank" rel="noreferrer" aria-label="Open arXiv paper">
+            <span>Paper</span>
+          </a>
+          <a class="nav-icon-link" href="https://github.com/LatentEvasion/latentevasion.github.io" target="_blank" rel="noreferrer" aria-label="Open GitHub repository">
+            <span>Code</span>
+          </a>
+        </nav>
+        <div id="heroSection" class="hero" data-observe-section>
+          <p class="eyebrow">Project Page</p>
+          <h1>Latent-space Attacks for Refusal Evasion in Language Models</h1>
+          <p class="subtitle">We recast refusal suppression as a latent-space evasion attack against linear probes. This page builds the intuition interactively: drag a margin to push a model's hidden representation past the probe's boundary and watch its answer change, then trace the effect through generation and walk through the model's latent space.</p>
+        </div>
+
+        <section id="intuitionSection" class="intuition-section" aria-label="Refusal evasion intuition" data-observe-section>
+          <div class="section-heading">
+            <p class="eyebrow">Intuition</p>
+            <h2>What does it mean to evade refusal?</h2>
+            <p>A linear probe separates the representations of prompts the model refuses from those it answers, with a decision boundary running between them. We recast refusal suppression as an evasion attack against this probe: to make the model comply, an attacker must move a harmful prompt's representation across the boundary, from the refusal region into the compliant one. This recasting has a sharp consequence — it shows that prior ablation methods are doing exactly one thing: projecting the representation onto the boundary, the smallest move that flips the probe's decision. In our terms, prior work is minimum-confidence evasion: it reaches the boundary and stops. Controlled Latent-space Evasion (CLE) goes further: it pushes the representation at a chosen distance past the boundary — the margin — placing it deep in the region where the model reliably complies. An optimal margin choice ensures that representations sit on the compliant side and yield higher refusal suppression.</p>
+          </div>
+        </section>
+
+        <section id="marginSection" class="evasion-section" aria-label="Interactive margin demonstration" data-observe-section>
+          <div class="section-heading">
+            <p class="eyebrow">Interactive evasion</p>
+            <h2>Controlling refusal evasion in latent space</h2>
+            <p>Drag the margin to push representations across the boundary, and watch how the model's completion changes.</p>
+          </div>
+
+          <div class="evasion-tool">
+            <div class="evasion-controls">
+              <label>
+                Model
+                <select id="evasionModelSelect">
+                  <option value="llama2-7b">llama2-7b</option>
+                </select>
+              </label>
+              <label>
+                HarmBench Prompt
+                <select id="evasionPromptSelect"></select>
+              </label>
+              <div class="region-compass" aria-label="Latent region compass">
+                <label class="region-compass-title" for="evasionMarginSlider">Confidence Margin</label>
+                <div class="region-compass-track">
+                  <span id="regionBoundaryTick" class="region-boundary-tick"></span>
+                  <span id="regionBoundaryLabel" class="region-boundary-label">ablation stops<br>here</span>
+                  <span id="regionCompassMarker" class="region-compass-marker"></span>
+                  <input id="evasionMarginSlider" type="range" min="0" max="0" step="1" value="0">
+                </div>
+                <div class="region-compass-labels">
+                  <span>refusal <br> region</span>
+                  <span>compliance region</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="plot-prompt-panel">
+              <p class="eyebrow">Selected Prompt</p>
+              <div id="evasionPlotPrompt" class="plot-prompt-text">Loading...</div>
+            </div>
+
+            <div class="evasion-visual">
+              <canvas id="evasionCanvas"></canvas>
+            </div>
+
+            <div class="completion-panel">
+              <p class="eyebrow">Completion At Selected Margin</p>
+              <div id="evasionCompletion" class="completion-text">Loading...</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="mechanismSection" class="crossing-section" aria-label="CLE-P and CLE-A crossing strategies" data-observe-section>
+          <div class="section-heading crossing-heading">
+            <p class="eyebrow">Mechanism</p>
+            <h2>Erasing refusal or evading a probe?</h2>
+            <p>Prior work projects every generated token onto the boundary because its goal is erasure: keeping refusal out of the residual stream entirely, at every position. CLE suggests an immediate fix: keep projecting every token, but project it well past the boundary deep into the compliant region — this is CLE-P. But our recasting changes the goal itself: suppressing refusal is not erasure, it is evading a probe. This raises a possibility prior work had no reason to consider — if all that matters is crossing the boundary, perhaps we need to cross it only once. We compute a single perturbation at the post-instruction token and reuse it for every later token, never reprojecting. This is CLE-A. Whether that one shift is enough to keep the whole generation across the boundary is exactly what the next section tests.</p>
+          </div>
+        </section>
+
+        <section id="generationSection" class="token-section" aria-label="CLE-A and CLE-P token dynamics" data-observe-section>
+          <div class="section-heading">
+            <p class="eyebrow">Generation Dynamics</p>
+            <h1>One shift is enough</h1>
+            <p>Tracking each method's compliance confidence across the first generated tokens, both CLE variants stay well above the probe threshold for the entire generation, and the single fixed shift of CLE-A holds just as firmly as the per-token reprojection of CLE-P. Prior work difference-in-means ablation (DiM), by contrast, hovers at the boundary, drifting in and out of the refusal region. Crossing once is enough.</p>
+          </div>
+
+          <div class="method-panels">
+            <article class="method-panel clep-panel">
+              <p class="eyebrow">CLE-P</p>
+              <div class="method-panel-head">
+                <h3>Projective Evasion</h3>
+                <button class="method-toggle" type="button" aria-expanded="false" aria-label="Expand CLE-P description">↓</button>
+              </div>
+              <p class="method-copy">CLE-P never assumes the activation will stay compliant. At every generated token, it re-checks the representation against the probe and pushes it back past the boundary to the target margin. Where prior ablation-based methods only project onto the boundary — the bare minimum to flip the decision — CLE-P projects to an explicit, optimized confidence, and keeps doing so at every step of generation.</p>          
+            </article>
+            <article class="method-panel clea-panel">
+              <p class="eyebrow">CLE-A</p>
+              <div class="method-panel-head">
+                <h3>Additive Evasion</h3>
+                <button class="method-toggle" type="button" aria-expanded="false" aria-label="Expand CLE-A description">↓</button>
+              </div>
+              <p class="method-copy">CLE-A computes a latent-space perturbation once at the post-instruction token, then adds it uniformly across all positions and optimized intervention layers for the rest of generation. Nothing is recomputed. If crossing the boundary once truly suffices, this one shared perturbation should sustain compliance on its own.</p>
+            </article>
+          </div>
+
+          <div class="token-tool">
+            <div class="token-controls">
+              <label>
+                Model
+                <select id="tokenModelSelect"></select>
+              </label>
+              <label>
+                HarmBench Prompt
+                <select id="tokenPromptSelect"></select>
+              </label>
+              <label>
+                Generated Token Position
+                <input id="tokenSlider" type="range" min="0" max="100" step="1" value="0">
+              </label>
+              <div id="tokenReadout" class="token-readout">Token 0</div>
+            </div>
+
+            <div class="token-main">
+              <div class="plot-prompt-panel token-prompt-panel">
+                <p class="eyebrow">Selected Prompt</p>
+                <div id="tokenPromptText" class="plot-prompt-text">Loading...</div>
+              </div>
+              <div class="token-plot-card">
+                <canvas id="tokenCanvas"></canvas>
+              </div>
+              <div class="token-values" id="tokenValues"></div>
+            </div>
+
+            <div class="token-completions">
+              <div class="completion-token-scrubber">
+                <label>
+                  Generated Token Position
+                  <input id="tokenCompletionSlider" type="range" min="0" max="100" step="1" value="0">
+                </label>
+                <div id="tokenCompletionReadout" class="token-readout">Token 0</div>
+              </div>
+              <article>
+                <p class="eyebrow">CLE-A Completion</p>
+                <div id="tokenCompletionClea" class="completion-text">Loading...</div>
+              </article>
+              <article>
+                <p class="eyebrow">CLE-P Completion</p>
+                <div id="tokenCompletionClep" class="completion-text">Loading...</div>
+              </article>
+              <article>
+                <p class="eyebrow">DiM Completion</p>
+                <div id="tokenCompletionDim" class="completion-text">Loading...</div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section id="layerDiveSection" class="layer-dive-section" aria-label="Layer-by-layer latent-space deep dive" data-observe-section>
+          <div class="section-heading">
+            <p class="eyebrow">LAYER BY LAYER</p>
+            <h2>A deep dive into latent space</h2>
+            <p>Each plot shows, at one layer, where prompts fall along the probe's main axis (the first principal component, PC1): refused harmful (red) prompts to the left, answered harmless (blue) prompts to the right. The markers track where our selected prompt lands under each method. Step through the layers: in the early layers the two distributions overlap and the methods sit together — there is little refusal signal to exploit yet, which is why the optimized intervention window skips them. In the informative middle layers they pull apart, and the contrast becomes clear: CLE-A and CLE-P land deep in the compliant region, while DiM stays pinned near the boundary. This holds layer after layer as we sweep through latent space.</p>          </div>
+
+          <div class="layer-dive-tool">
+            <div class="layer-dive-controls">
+              <label>
+                Model
+                <select id="layerDiveModelSelect"></select>
+              </label>
+              <label>
+                HarmBench Prompt
+                <select id="layerDivePromptSelect"></select>
+              </label>
+              <label>
+                Layer
+                <input id="layerDiveLayerSlider" type="range" min="0" max="0" step="1" value="0">
+              </label>
+              <div id="layerDiveLayerReadout" class="token-readout">Layer 0</div>
+              <fieldset>
+                <legend>Methods</legend>
+                <label class="checkline">
+                  <input type="checkbox" name="layerDiveMethod" value="dim" checked>
+                  DiM
+                </label>
+                <label class="checkline">
+                  <input type="checkbox" name="layerDiveMethod" value="pipeline" checked>
+                  CLE-A
+                </label>
+                <label class="checkline">
+                  <input type="checkbox" name="layerDiveMethod" value="projection" checked>
+                  CLE-P
+                </label>
+              </fieldset>
+            </div>
+
+            <div class="layer-dive-main">
+              <div class="plot-prompt-panel">
+                <p class="eyebrow">Selected Prompt</p>
+                <div id="layerDivePromptText" class="plot-prompt-text">Loading...</div>
+              </div>
+              <article class="layer-dive-chart">
+                <h3 id="layerDiveChartTitle">Layer 0</h3>
+                <canvas id="layerDiveCanvas"></canvas>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section id="authorsSection" class="paper-footer" aria-label="Paper authors and citation" data-observe-section>
+          <h2>Authors</h2>
+          <div class="author-lines">
+            <p>
+              <a href="https://giorgiopiras.github.io/" aria-disabled="true">Giorgio Piras<sup>*1</sup></a>
+              <a href="https://rmura498.github.io/" aria-disabled="true">Raffaele Mura<sup>*1</sup></a>
+              <a href="https://fabiobrau.github.io/" aria-disabled="true">Fabio Brau<sup>*1</sup></a>
+            </p>
+            <p>
+              <a href="https://maurapintor.github.io/" aria-disabled="true">Maura Pintor<sup>1</sup></a>
+              <a href="https://www.lucaoneto.com/" aria-disabled="true">Luca Oneto<sup>2</sup></a>
+              <a href="https://scholar.google.it/citations?user=sCypmFAAAAAJ&hl=it" aria-disabled="true">Fabio Roli<sup>2</sup></a>
+            </p>
+            <p>
+              <a href="https://battistabiggio.github.io/" aria-disabled="true">Battista Biggio<sup>1</sup></a>
+            </p>
+          </div>
+          <div class="affiliation-lines">
+            <span><sup>*</sup> Equal contribution</span>
+            <span><sup>1</sup> University of Cagliari</span>
+            <span><sup>2</sup> University of Genova</span>
+          </div>
+
+          <article class="citation-box">
+            <h3>Citation</h3>
+            <p>If you found our Latent-space Evasion work useful, please cite us as:</p>
+            <pre><code>@article{piras2026latent,
+  title={Latent-space Attacks for Refusal Evasion in Language Models},
+  author={Piras, Giorgio and Mura, Raffaele and Brau, Fabio and Pintor, Maura and Oneto, Luca and Roli, Fabio and Biggio, Battista},
+  journal={arXiv preprint arXiv:2605.21706},
+  year={2026}
+}</code></pre>
+          </article>
+        </section>
+      </section>
+
+      <section id="explorerPage" class="explorer-page" hidden>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Controlled Latent-space Evasion</p>
+          <h1>Latent Refusal Visualization</h1>
+        </div>
+        <div class="top-actions">
+          <button id="backHome" class="ghost-action">Home</button>
+          <div class="mode-pill">Constrained Mode</div>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <aside class="controls" aria-label="Explorer controls">
+          <label>
+            Model
+            <select id="modelSelect"></select>
+          </label>
+
+          <label>
+            Intervention Layers
+            <select id="layersSelect"></select>
+          </label>
+
+          <label>
+            Margins
+            <select id="marginSelect"></select>
+          </label>
+
+          <label>
+            HarmBench Prompt
+            <select id="promptSelect"></select>
+          </label>
+
+          <label>
+            Jump to Layer
+            <select id="layerJumpSelect"></select>
+          </label>
+
+          <fieldset>
+            <legend>Pins</legend>
+            <label class="checkline">
+              <input type="checkbox" name="methodPin" value="dim" checked>
+              DiM
+            </label>
+            <label class="checkline">
+              <input type="checkbox" name="methodPin" value="pipeline" checked>
+              CLE-A
+            </label>
+            <label class="checkline">
+              <input type="checkbox" name="methodPin" value="projection" checked>
+              CLE-P
+            </label>
+          </fieldset>
+
+          <div class="metadata" id="metadata" hidden></div>
+        </aside>
+
+        <section class="content">
+          <div class="prompt-panel">
+            <div>
+              <p class="eyebrow">Selected Prompt</p>
+              <h2 id="promptTitle">Loading...</h2>
+            </div>
+            <p id="promptCategory" class="category"></p>
+          </div>
+
+          <div class="legend">
+            <span><i class="swatch harmful"></i> harmful train</span>
+            <span><i class="swatch harmless"></i> harmless train</span>
+            <span><i class="swatch dim"></i> DiM selected prompt</span>
+            <span><i class="swatch pipeline"></i> CLE-A selected prompt</span>
+            <span><i class="swatch projection"></i> CLE-P selected prompt</span>
+          </div>
+
+          <div id="charts" class="charts"></div>
+        </section>
+      </section>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
