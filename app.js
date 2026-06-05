@@ -1155,13 +1155,18 @@ async function loadTokenScoreOptions() {
 async function loadEvasionDemo() {
   const selectedModel = els.evasionModel.value || "llama2-7b";
   state.evasion = await getJson(`/api/evasion-demo?model=${encodeURIComponent(selectedModel)}`);
+  const initialPromptIds = new Set((state.evasion.pcaBasis?.promptInitial || []).map((prompt) => String(prompt.index)));
+  const evasionPrompts = initialPromptIds.size
+    ? state.evasion.prompts.filter((prompt) => initialPromptIds.has(String(prompt.index)))
+    : state.evasion.prompts;
+  state.evasion.prompts = evasionPrompts;
   fillSelect(
     els.evasionPrompt,
-    state.evasion.prompts,
+    evasionPrompts,
     (prompt) => String(prompt.index),
     (prompt) => `${String(prompt.index).padStart(3, "0")} · ${prompt.prompt.slice(0, 86)}`,
   );
-  if (state.evasion.prompts.some((prompt) => Number(prompt.index) === 8)) {
+  if (evasionPrompts.some((prompt) => Number(prompt.index) === 8)) {
     els.evasionPrompt.value = "8";
   }
   els.evasionMargin.min = "0";
