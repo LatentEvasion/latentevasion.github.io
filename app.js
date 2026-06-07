@@ -63,6 +63,7 @@ const els = {
 
 const params = new URLSearchParams(window.location.search);
 const USE_STATIC_DATA = params.has("static") || !["localhost", "127.0.0.1", ""].includes(window.location.hostname);
+const TOKEN_SCORE_MAX_STEPS = 100;
 
 function staticKey(value) {
   return String(value).replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^_+|_+$/g, "") || "item";
@@ -980,7 +981,7 @@ function drawTokenCanvas() {
   const pad = { left: 54, right: 28, top: 28, bottom: 42 };
   const methods = ["CLE-A", "CLE-P", "DiM"].filter((method) => tokenRun(method));
   const tokenIndex = Number(els.tokenSlider.value || 0);
-  const maxStep = Math.max(1, ...methods.map((method) => tokenRun(method).scores.length - 1));
+  const maxStep = Math.min(TOKEN_SCORE_MAX_STEPS, Math.max(1, ...methods.map((method) => tokenRun(method).scores.length - 1)));
   const xScale = (index) => pad.left + (index / maxStep) * (w - pad.left - pad.right);
   const yScale = (value) => pad.top + (1 - value) * (h - pad.top - pad.bottom);
 
@@ -1077,7 +1078,7 @@ function updateTokenScoreView() {
   els.tokenPromptText.textContent = prompt?.prompt || "No prompt selected.";
 
   const maxScores = Math.max(1, ...["CLE-A", "CLE-P", "DiM"].map((method) => tokenRun(method)?.scores.length || 0));
-  const sliderMax = Math.max(0, Math.min(100, maxScores - 1));
+  const sliderMax = Math.min(TOKEN_SCORE_MAX_STEPS, Math.max(0, maxScores - 1));
   if (Number(els.tokenSlider.max) !== sliderMax) els.tokenSlider.max = String(sliderMax);
   if (els.tokenCompletionSlider && Number(els.tokenCompletionSlider.max) !== sliderMax) {
     els.tokenCompletionSlider.max = String(sliderMax);
