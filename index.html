@@ -88,7 +88,7 @@
         <section id="mechanismSection" class="crossing-section" aria-label="CLE-P and CLE-A crossing strategies" data-observe-section>
           <div class="section-heading crossing-heading">
             <p class="eyebrow">Mechanism</p>
-            <h2>Erasing refusal or evading a probe?</h2>
+            <h2>From erasing refusal to evading a probe</h2>
             <p>Prior work projects every generated token onto the boundary because its goal is erasure: keeping refusal out of the residual stream entirely, at every position. CLE suggests an immediate fix: keep projecting every token, but project it well past the boundary deep into the compliant region — this is CLE-P. But our recasting changes the goal itself: suppressing refusal is not erasure, it is evading a probe. This raises a possibility prior work had no reason to consider — if all that matters is crossing the boundary, perhaps we need to cross it only once. We compute a single perturbation at the post-instruction token and reuse it for every later token, never reprojecting. This is CLE-A. Whether that one shift is enough to keep the whole generation across the boundary is exactly what the next section tests.</p>
           </div>
         </section>
