@@ -835,7 +835,7 @@ function drawEvasionCanvas() {
     const sx = xScale(start.x);
     const sy = yScale(start.y);
     withPlotClip(() => {
-      ctx.strokeStyle = "#6f5fb8";
+      ctx.strokeStyle = "#2f9f75";
       ctx.lineWidth = 2.4;
       ctx.beginPath();
       ctx.moveTo(sx, sy);
@@ -845,7 +845,7 @@ function drawEvasionCanvas() {
       ctx.beginPath();
       ctx.arc(sx, sy, 5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#6f5fb8";
+      ctx.fillStyle = "#2f9f75";
       ctx.beginPath();
       ctx.arc(x, y, 7, 0, Math.PI * 2);
       ctx.fill();
