@@ -451,7 +451,7 @@ function drawDistribution(canvas, layer, options = {}) {
       key: "pipeline",
       enabled: visibleMethods.has("pipeline") && showClea,
       value: layer.selected.pipeline,
-      color: "#2f9f75",
+      color: "#6f5fb8",
       label: "CLE-A",
       heightRatio: 0.84,
       lane: 0,
@@ -460,7 +460,7 @@ function drawDistribution(canvas, layer, options = {}) {
       key: "projection",
       enabled: visibleMethods.has("projection") && showClep,
       value: layer.selected.projection,
-      color: "#6f5fb8",
+      color: "#2f9f75",
       label: "CLE-P",
       heightRatio: 0.76,
       lane: 1,
@@ -835,7 +835,7 @@ function drawEvasionCanvas() {
     const sx = xScale(start.x);
     const sy = yScale(start.y);
     withPlotClip(() => {
-      ctx.strokeStyle = "#2f9f75";
+      ctx.strokeStyle = "#6f5fb8";
       ctx.lineWidth = 2.4;
       ctx.beginPath();
       ctx.moveTo(sx, sy);
@@ -845,7 +845,7 @@ function drawEvasionCanvas() {
       ctx.beginPath();
       ctx.arc(sx, sy, 5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#2f9f75";
+      ctx.fillStyle = "#6f5fb8";
       ctx.beginPath();
       ctx.arc(x, y, 7, 0, Math.PI * 2);
       ctx.fill();
@@ -955,8 +955,8 @@ function updateEvasionDemo() {
 }
 
 function methodColor(method) {
-  if (method === "CLE-A") return "#2f9f75";
-  if (method === "CLE-P") return "#6f5fb8";
+  if (method === "CLE-P") return "#2f9f75";
+  if (method === "CLE-A") return "#6f5fb8";
   if (method === "DiM") return "#d28b26";
   return "#8f8a80";
 }
@@ -979,7 +979,7 @@ function drawTokenCanvas() {
   const w = rect.width;
   const h = rect.height;
   const pad = { left: 54, right: 28, top: 28, bottom: 42 };
-  const methods = ["CLE-A", "CLE-P", "DiM"].filter((method) => tokenRun(method));
+  const methods = ["CLE-P", "CLE-A", "DiM"].filter((method) => tokenRun(method));
   const tokenIndex = Number(els.tokenSlider.value || 0);
   const maxStep = Math.min(TOKEN_SCORE_MAX_STEPS, Math.max(1, ...methods.map((method) => tokenRun(method).scores.length - 1)));
   const xScale = (index) => pad.left + (index / maxStep) * (w - pad.left - pad.right);
@@ -1077,7 +1077,7 @@ function updateTokenScoreView() {
   const prompt = state.tokenScore.prompts.find((item) => String(item.index) === promptIndex);
   els.tokenPromptText.textContent = prompt?.prompt || "No prompt selected.";
 
-  const maxScores = Math.max(1, ...["CLE-A", "CLE-P", "DiM"].map((method) => tokenRun(method)?.scores.length || 0));
+  const maxScores = Math.max(1, ...["CLE-P", "CLE-A", "DiM"].map((method) => tokenRun(method)?.scores.length || 0));
   const sliderMax = Math.min(TOKEN_SCORE_MAX_STEPS, Math.max(0, maxScores - 1));
   if (Number(els.tokenSlider.max) !== sliderMax) els.tokenSlider.max = String(sliderMax);
   if (els.tokenCompletionSlider && Number(els.tokenCompletionSlider.max) !== sliderMax) {
@@ -1097,7 +1097,7 @@ function updateTokenScoreView() {
     els.tokenCompletionSlider.value = els.tokenSlider.value;
   }
 
-  els.tokenValues.replaceChildren(...["CLE-A", "CLE-P", "DiM"].map((method) => {
+  els.tokenValues.replaceChildren(...["CLE-P", "CLE-A", "DiM"].map((method) => {
     const run = tokenRun(method);
     const value = run?.scores?.[Math.min(tokenIndex, (run?.scores?.length || 1) - 1)];
     const item = document.createElement("div");

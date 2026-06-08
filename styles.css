@@ -9,8 +9,8 @@
   --harmful: #b94a48;
   --harmless: #86bfe6;
   --dim: #d28b26;
-  --pipeline: #2f9f75;
-  --projection: #6f5fb8;
+  --pipeline: #6f5fb8;
+  --projection: #2f9f75;
 }
 
 * {
@@ -574,13 +574,13 @@ body {
 }
 
 .token-strip-token.active.clea {
-  background: rgba(47, 159, 117, .28);
-  box-shadow: 0 0 0 1px rgba(47, 159, 117, .42) inset;
+  background: rgba(111, 95, 184, .26);
+  box-shadow: 0 0 0 1px rgba(111, 95, 184, .42) inset;
 }
 
 .token-strip-token.active.clep {
-  background: rgba(111, 95, 184, .26);
-  box-shadow: 0 0 0 1px rgba(111, 95, 184, .42) inset;
+  background: rgba(47, 159, 117, .28);
+  box-shadow: 0 0 0 1px rgba(47, 159, 117, .42) inset;
 }
 
 .token-strip-token.active.dim {
