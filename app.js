@@ -933,6 +933,22 @@ function setMarginFromCompassEvent(event) {
   updateEvasionDemo();
 }
 
+function keyboardStep(event) {
+  if (event.key === "ArrowLeft" || event.key === "ArrowDown") return -1;
+  if (event.key === "ArrowRight" || event.key === "ArrowUp") return 1;
+  return 0;
+}
+
+function nudgeRange(input, direction, onChange) {
+  if (!input || !direction) return;
+  const min = Number(input.min || 0);
+  const max = Number(input.max || 0);
+  const step = Number(input.step || 1) || 1;
+  const current = Number(input.value || min);
+  input.value = String(Math.max(min, Math.min(max, current + direction * step)));
+  onChange();
+}
+
 function updateRegionCompass() {
   if (!state.evasion || !els.regionCompassMarker || !els.regionBoundaryTick) return;
   const maxIndex = Math.max(1, state.evasion.margins.length - 1);
@@ -941,6 +957,13 @@ function updateRegionCompass() {
   const currentPercent = Math.max(0, Math.min(100, compassPercentForIndex(currentIndex, boundaryIndex, maxIndex)));
   els.regionCompassMarker.style.left = `${currentPercent}%`;
   els.regionBoundaryTick.style.left = "50%";
+  const currentMargin = state.evasion.margins[currentIndex] ?? currentIndex;
+  for (const slider of [els.regionCompassTrack, els.evasionCanvas]) {
+    slider?.setAttribute("aria-valuemin", els.evasionMargin.min || "0");
+    slider?.setAttribute("aria-valuemax", els.evasionMargin.max || String(maxIndex));
+    slider?.setAttribute("aria-valuenow", String(currentIndex));
+    slider?.setAttribute("aria-valuetext", `Margin ${currentMargin}`);
+  }
 }
 
 function updateEvasionDemo() {
@@ -1394,6 +1417,12 @@ async function init() {
   els.layerDiveModel?.addEventListener("change", loadLayerDivePanel);
   els.layerDivePrompt?.addEventListener("change", refreshLayerDivePrompt);
   els.layerDiveLayer?.addEventListener("input", renderLayerDive);
+  els.layerDiveLayer?.addEventListener("keydown", (event) => {
+    const direction = keyboardStep(event);
+    if (!direction) return;
+    event.preventDefault();
+    nudgeRange(els.layerDiveLayer, direction, renderLayerDive);
+  });
   els.layerDiveMethodPins.forEach((input) => {
     input.addEventListener("change", () => {
       state.layerDive.visibleMethods = new Set(
@@ -1407,10 +1436,23 @@ async function init() {
   els.evasionModel.addEventListener("change", loadEvasionDemo);
   els.evasionPrompt.addEventListener("change", updateEvasionDemo);
   els.evasionMargin.addEventListener("input", updateEvasionDemo);
+  els.regionCompassTrack.setAttribute("tabindex", "0");
+  els.regionCompassTrack.setAttribute("role", "slider");
+  els.regionCompassTrack.setAttribute("aria-label", "Confidence margin");
+  els.evasionCanvas.setAttribute("tabindex", "0");
+  els.evasionCanvas.setAttribute("role", "slider");
+  els.evasionCanvas.setAttribute("aria-label", "Confidence margin plot");
   els.regionCompassTrack.addEventListener("pointerdown", (event) => {
     state.evasionCompassDrag = true;
+    els.regionCompassTrack.focus();
     els.regionCompassTrack.setPointerCapture(event.pointerId);
     setMarginFromCompassEvent(event);
+  });
+  els.regionCompassTrack.addEventListener("keydown", (event) => {
+    const direction = keyboardStep(event);
+    if (!direction) return;
+    event.preventDefault();
+    nudgeRange(els.evasionMargin, direction, updateEvasionDemo);
   });
   els.regionCompassTrack.addEventListener("pointermove", (event) => {
     if (state.evasionCompassDrag) setMarginFromCompassEvent(event);
@@ -1424,8 +1466,15 @@ async function init() {
   });
   els.evasionCanvas.addEventListener("pointerdown", (event) => {
     state.evasionDrag = true;
+    els.evasionCanvas.focus();
     els.evasionCanvas.setPointerCapture(event.pointerId);
     setMarginFromCanvasEvent(event);
+  });
+  els.evasionCanvas.addEventListener("keydown", (event) => {
+    const direction = keyboardStep(event);
+    if (!direction) return;
+    event.preventDefault();
+    nudgeRange(els.evasionMargin, direction, updateEvasionDemo);
   });
   els.evasionCanvas.addEventListener("pointermove", (event) => {
     if (state.evasionDrag) setMarginFromCanvasEvent(event);
@@ -1446,9 +1495,24 @@ async function init() {
     updateTokenScoreView();
   });
   els.tokenSlider.addEventListener("input", updateTokenScoreView);
+  els.tokenSlider.addEventListener("keydown", (event) => {
+    const direction = keyboardStep(event);
+    if (!direction) return;
+    event.preventDefault();
+    nudgeRange(els.tokenSlider, direction, updateTokenScoreView);
+  });
   els.tokenCompletionSlider.addEventListener("input", () => {
     els.tokenSlider.value = els.tokenCompletionSlider.value;
     updateTokenScoreView();
+  });
+  els.tokenCompletionSlider.addEventListener("keydown", (event) => {
+    const direction = keyboardStep(event);
+    if (!direction) return;
+    event.preventDefault();
+    nudgeRange(els.tokenCompletionSlider, direction, () => {
+      els.tokenSlider.value = els.tokenCompletionSlider.value;
+      updateTokenScoreView();
+    });
   });
   for (const button of document.querySelectorAll(".method-toggle")) {
     button.addEventListener("click", () => {

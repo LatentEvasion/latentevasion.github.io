@@ -458,6 +458,12 @@ body {
   position: relative;
 }
 
+.region-compass-track:focus-visible,
+#evasionCanvas:focus-visible {
+  outline: 3px solid rgba(47, 159, 117, .38);
+  outline-offset: 4px;
+}
+
 .region-compass-track input[type="range"] {
   height: 38px;
   inset: -12px 0 auto;
