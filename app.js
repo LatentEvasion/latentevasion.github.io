@@ -1436,6 +1436,12 @@ async function init() {
   els.evasionModel.addEventListener("change", loadEvasionDemo);
   els.evasionPrompt.addEventListener("change", updateEvasionDemo);
   els.evasionMargin.addEventListener("input", updateEvasionDemo);
+  els.evasionMargin.addEventListener("keydown", (event) => {
+    const direction = keyboardStep(event);
+    if (!direction) return;
+    event.preventDefault();
+    nudgeRange(els.evasionMargin, direction, updateEvasionDemo);
+  });
   els.regionCompassTrack.setAttribute("tabindex", "0");
   els.regionCompassTrack.setAttribute("role", "slider");
   els.regionCompassTrack.setAttribute("aria-label", "Confidence margin");
@@ -1444,7 +1450,7 @@ async function init() {
   els.evasionCanvas.setAttribute("aria-label", "Confidence margin plot");
   els.regionCompassTrack.addEventListener("pointerdown", (event) => {
     state.evasionCompassDrag = true;
-    els.regionCompassTrack.focus();
+    els.evasionMargin.focus();
     els.regionCompassTrack.setPointerCapture(event.pointerId);
     setMarginFromCompassEvent(event);
   });
@@ -1466,7 +1472,7 @@ async function init() {
   });
   els.evasionCanvas.addEventListener("pointerdown", (event) => {
     state.evasionDrag = true;
-    els.evasionCanvas.focus();
+    els.evasionMargin.focus();
     els.evasionCanvas.setPointerCapture(event.pointerId);
     setMarginFromCanvasEvent(event);
   });

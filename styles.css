@@ -459,6 +459,7 @@ body {
 }
 
 .region-compass-track:focus-visible,
+.region-compass-track:focus-within,
 #evasionCanvas:focus-visible {
   outline: 3px solid rgba(47, 159, 117, .38);
   outline-offset: 4px;
