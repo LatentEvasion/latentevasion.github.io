@@ -1164,8 +1164,8 @@ async function loadTokenScoreRun() {
     (prompt) => String(prompt.index),
     (prompt) => `${String(prompt.index).padStart(3, "0")} · ${prompt.prompt.slice(0, 86)}`,
   );
-  if (state.tokenScore.prompts.some((prompt) => Number(prompt.index) === 8)) {
-    els.tokenPrompt.value = "8";
+  if (state.tokenScore.prompts.some((prompt) => Number(prompt.index) === 0)) {
+    els.tokenPrompt.value = "0";
   }
   els.tokenSlider.value = "0";
   if (els.tokenCompletionSlider) els.tokenCompletionSlider.value = "0";
