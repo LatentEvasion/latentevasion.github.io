@@ -576,13 +576,33 @@ function evasionBoundaryStepIndex(start, normal, scale) {
   return boundaryStepIndex;
 }
 
+function evasionBaselineOffset() {
+  return state.evasion?.baselineCompletions ? 1 : 0;
+}
+
+function evasionStepCount() {
+  if (!state.evasion) return 0;
+  return state.evasion.margins.length + evasionBaselineOffset();
+}
+
+function evasionMarginForStep(stepIndex) {
+  const offset = evasionBaselineOffset();
+  if (offset && stepIndex === 0) return null;
+  return state.evasion.margins[stepIndex - offset];
+}
+
+function evasionStepForMarginIndex(marginIndex) {
+  return marginIndex + evasionBaselineOffset();
+}
+
 function currentEvasionBoundaryIndex() {
-  if (!state.evasion?.pcaBasis) return Math.round(Math.max(1, (state.evasion?.margins?.length || 1) - 1) / 2);
+  const maxIndex = Math.max(1, evasionStepCount() - 1);
+  if (!state.evasion?.pcaBasis) return Math.round(maxIndex / 2);
   const basis = state.evasion.pcaBasis;
   const promptIndex = Number(els.evasionPrompt.value || 0);
   const initial = basis.promptInitial?.find((p) => Number(p.index) === promptIndex);
   const normal = basis.probe?.complianceNormalPca;
-  if (!initial || !normal) return Math.round(Math.max(1, state.evasion.margins.length - 1) / 2);
+  if (!initial || !normal) return Math.round(maxIndex / 2);
 
   const harmlessPoints = basis.background?.harmless || [];
   const harmlessCentroid = harmlessPoints.length
@@ -599,7 +619,7 @@ function currentEvasionBoundaryIndex() {
     scale = Math.max(0.4, alongNormal / bestMargin);
   }
   const computedIndex = evasionBoundaryStepIndex(initial, normal, scale);
-  return computedIndex >= 0 ? computedIndex : Math.round(Math.max(1, state.evasion.margins.length - 1) / 2);
+  return computedIndex >= 0 ? evasionStepForMarginIndex(computedIndex) : Math.round(maxIndex / 2);
 }
 
 function compassPercentForIndex(index, boundaryIndex, maxIndex) {
@@ -636,7 +656,8 @@ function drawEvasionCanvas() {
   const h = rect.height;
   const pad = { left: 52, right: 28, top: 34, bottom: 44 };
   const promptIndex = Number(els.evasionPrompt.value || 0);
-  const margin = state.evasion.margins[Number(els.evasionMargin.value || 0)];
+  const stepIndex = Number(els.evasionMargin.value || 0);
+  const margin = evasionMarginForStep(stepIndex);
   const position = state.evasion.positions[margin]?.[String(promptIndex)];
   const basis = state.evasion.pcaBasis;
   const initial = basis?.promptInitial?.find((p) => Number(p.index) === promptIndex);
@@ -804,7 +825,7 @@ function drawEvasionCanvas() {
     if (basis?.probe?.complianceNormalPca) {
       const bestMargin = Number(state.evasion.bestMargin);
       const currentMargin = Number(margin);
-      const selectedMarginIndex = Number(els.evasionMargin.value || 0);
+      const selectedMarginIndex = stepIndex - evasionBaselineOffset();
       const normal = basis.probe.complianceNormalPca;
       let scale = 2.2;
       if (Number.isFinite(bestMargin) && bestMargin > 0 && harmlessCentroid) {
@@ -815,9 +836,9 @@ function drawEvasionCanvas() {
         const alongNormal = toHarmless.x * normal[0] + toHarmless.y * normal[1];
         scale = Math.max(0.4, alongNormal / bestMargin);
       }
-      let effectiveMargin = currentMargin;
+      let effectiveMargin = margin === null ? 0 : currentMargin;
       const boundaryStepIndex = evasionBoundaryStepIndex(start, normal, scale);
-      if (selectedMarginIndex === boundaryStepIndex) {
+      if (margin !== null && selectedMarginIndex === boundaryStepIndex) {
         const boundaryAnchor = basis.probe?.boundaryAnchor;
         const startSignedDistance = (
           (start.x - boundaryAnchor.x) * normal[0]
@@ -915,7 +936,7 @@ function setMarginFromCanvasEvent(event) {
     const distance = Math.abs(m - marginEstimate);
     if (distance < bestDistance) {
       bestDistance = distance;
-      bestIndex = index;
+      bestIndex = evasionStepForMarginIndex(index);
     }
   });
   els.evasionMargin.value = String(bestIndex);
@@ -926,7 +947,7 @@ function setMarginFromCompassEvent(event) {
   if (!state.evasion || !els.regionCompassTrack) return;
   const rect = els.regionCompassTrack.getBoundingClientRect();
   const percent = Math.max(0, Math.min(100, ((event.clientX - rect.left) / Math.max(1, rect.width)) * 100));
-  const maxIndex = Math.max(0, state.evasion.margins.length - 1);
+  const maxIndex = Math.max(0, evasionStepCount() - 1);
   const boundaryIndex = currentEvasionBoundaryIndex();
   const nextIndex = Math.max(0, Math.min(maxIndex, compassIndexFromPercent(percent, boundaryIndex, maxIndex)));
   els.evasionMargin.value = String(nextIndex);
@@ -951,28 +972,32 @@ function nudgeRange(input, direction, onChange) {
 
 function updateRegionCompass() {
   if (!state.evasion || !els.regionCompassMarker || !els.regionBoundaryTick) return;
-  const maxIndex = Math.max(1, state.evasion.margins.length - 1);
+  const maxIndex = Math.max(1, evasionStepCount() - 1);
   const currentIndex = Number(els.evasionMargin.value || 0);
   const boundaryIndex = currentEvasionBoundaryIndex();
   const currentPercent = Math.max(0, Math.min(100, compassPercentForIndex(currentIndex, boundaryIndex, maxIndex)));
   els.regionCompassMarker.style.left = `${currentPercent}%`;
   els.regionBoundaryTick.style.left = "50%";
-  const currentMargin = state.evasion.margins[currentIndex] ?? currentIndex;
+  const currentMargin = evasionMarginForStep(currentIndex);
+  const currentText = currentMargin === null ? "No steering" : `Margin ${currentMargin}`;
   for (const slider of [els.regionCompassTrack, els.evasionCanvas]) {
     slider?.setAttribute("aria-valuemin", els.evasionMargin.min || "0");
     slider?.setAttribute("aria-valuemax", els.evasionMargin.max || String(maxIndex));
     slider?.setAttribute("aria-valuenow", String(currentIndex));
-    slider?.setAttribute("aria-valuetext", `Margin ${currentMargin}`);
+    slider?.setAttribute("aria-valuetext", currentText);
   }
 }
 
 function updateEvasionDemo() {
   if (!state.evasion) return;
-  const margin = state.evasion.margins[Number(els.evasionMargin.value || 0)];
+  const margin = evasionMarginForStep(Number(els.evasionMargin.value || 0));
   const promptIndex = String(Number(els.evasionPrompt.value || 0));
   const prompt = state.evasion.prompts.find((p) => String(p.index) === promptIndex);
   els.evasionPlotPrompt.textContent = prompt?.prompt || "No prompt selected.";
-  els.evasionCompletion.textContent = clampText(state.evasion.completions[margin]?.[promptIndex]?.response);
+  const completion = margin === null
+    ? state.evasion.baselineCompletions?.[promptIndex]?.response
+    : state.evasion.completions[margin]?.[promptIndex]?.response;
+  els.evasionCompletion.textContent = clampText(completion);
   updateRegionCompass();
   drawEvasionCanvas();
 }
@@ -1204,9 +1229,10 @@ async function loadEvasionDemo() {
     els.evasionPrompt.value = "8";
   }
   els.evasionMargin.min = "0";
-  els.evasionMargin.max = String(Math.max(0, state.evasion.margins.length - 1));
+  els.evasionMargin.max = String(Math.max(0, evasionStepCount() - 1));
   els.evasionMargin.step = "1";
-  const defaultIndex = Math.max(0, state.evasion.margins.findIndex((margin) => margin === state.evasion.bestMargin));
+  const bestMarginIndex = state.evasion.margins.findIndex((margin) => margin === state.evasion.bestMargin);
+  const defaultIndex = evasionBaselineOffset() ? 0 : Math.max(0, bestMarginIndex);
   els.evasionMargin.value = String(defaultIndex);
   updateEvasionDemo();
 }
