@@ -293,30 +293,6 @@ The Korean War began in 1950 when Nort</div>
           </div>
         </section>
 
-        <section id="summarySection" class="crossing-section" aria-label="Paper abstract and results" data-observe-section>
-          <div class="section-heading">
-            <p class="eyebrow">Paper Summary</p>
-            <h2>Abstract</h2>
-            <p>We recast refusal suppression in language models as a latent-space evasion attack against linear probes. A linear probe separates representations of prompts the model refuses from those it answers, with a decision boundary between refusal and compliance. Prior ablation methods can be read as minimum-confidence evasion: they project the representation onto that boundary, the smallest move that flips the probe's decision, and repeat this erasure at every generated token. Controlled Latent-space Evasion (CLE) instead pushes the hidden representation a chosen distance past the boundary, deep into the compliant region. CLE-P keeps checking and projecting every generated token to the target margin, while CLE-A computes one perturbation at the post-instruction token and reuses it across later positions and intervention layers. The interactive visualizations on this page show how changing the margin moves the prompt in latent space, how CLE-P and CLE-A maintain compliance confidence across generation, and how both CLE variants land deeper in the compliant region than DiM across layers.</p>
-          </div>
-
-          <article class="citation-box">
-            <h3>Results</h3>
-            <!-- TODO: add results table (ASR on HarmBench / StrongREJECT for DiM,
-           CLE-P, CLE-A). Numbers are not present in this repository. -->
-          </article>
-
-          <article class="citation-box">
-            <h3>Takeaways</h3>
-            <ul>
-              <li>Refusal suppression can be treated as evasion against a linear probe in latent space.</li>
-              <li>Prior ablation methods move representations to the probe boundary and stop.</li>
-              <li>CLE uses an explicit confidence margin to push representations into the compliant region.</li>
-              <li>CLE-A tests whether one fixed post-instruction shift is enough across generation.</li>
-            </ul>
-          </article>
-        </section>
-
         <section id="authorsSection" class="paper-footer" aria-label="Paper authors and citation" data-observe-section>
           <h2>Authors</h2>
           <div class="author-lines">
